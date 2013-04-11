@@ -768,7 +768,7 @@ connectOptions2(PGconn *conn)
         char buf[4096];
         struct passwd* pwd = getpwuid(getuid());
         if (pwd) homeDir = pwd->pw_dir;
-        sprintf(buf, "%s/Library/Containers/net.r0ml.transgres/Data/Library/Application Support/tmp", homeDir);
+        sprintf(buf, "%s/Library/Containers/net.r0ml.transgres/Data/tmp", homeDir);
         conn->pghost = strdup(buf);
     }
     
