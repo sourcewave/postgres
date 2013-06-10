@@ -1,3 +1,6 @@
+This branch tracks the Postgres 9.2 series with modifications to support
+incorporation in Transgres.
+
 PostgreSQL Database Management System
 =====================================
 
