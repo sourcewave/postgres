@@ -21,15 +21,25 @@ OBJS=   pg_config.o $(WIN32RES)
 STD_CPPFLAGS := $(filter-out -I$(top_srcdir)/src/include -I$(top_builddir)/src/include,$(CPPFLAGS))
 STD_LDFLAGS := $(filter-out -L$(top_builddir)/src/port,$(LDFLAGS))
 
-override CPPFLAGS += -DVAL_CONFIGURE="\"$(configure_args)\""
-override CPPFLAGS += -DVAL_CC="\"$(CC)\""
-override CPPFLAGS += -DVAL_CPPFLAGS="\"$(STD_CPPFLAGS)\""
-override CPPFLAGS += -DVAL_CFLAGS="\"$(CFLAGS)\""
-override CPPFLAGS += -DVAL_CFLAGS_SL="\"$(CFLAGS_SL)\""
-override CPPFLAGS += -DVAL_LDFLAGS="\"$(STD_LDFLAGS)\""
-override CPPFLAGS += -DVAL_LDFLAGS_EX="\"$(LDFLAGS_EX)\""
-override CPPFLAGS += -DVAL_LDFLAGS_SL="\"$(LDFLAGS_SL)\""
-override CPPFLAGS += -DVAL_LIBS="\"$(LIBS)\""
+empty:= 
+space:= $(empty) $(empty)
+quote:=\"
+
+define dval
+  override CPPFLAGS += -DVAL_$1=$(subst $(space),\\040,$(quote)$($1)$(quote))
+endef
+
+CONFIGURE := $(configure_args)
+
+$(eval $(call dval,CONFIGURE))
+$(eval $(call dval,CC))
+$(eval $(call dval,STD_CPPFLAGS))
+$(eval $(call dval,CFLAGS))
+$(eval $(call dval,CFLAGS_SL))
+$(eval $(call dval,STD_LDFLAGS))
+$(eval $(call dval,LDFLAGS_EX))
+$(eval $(call dval,LDFLAGS_SL))
+$(eval $(call dval,LIBS))
 
 all: pg_config
 
