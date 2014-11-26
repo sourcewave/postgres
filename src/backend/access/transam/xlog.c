@@ -65,8 +65,8 @@ extern uint32 bootstrap_data_checksum_version;
 /* File path names (all relative to $PGDATA) */
 #define RECOVERY_COMMAND_FILE	"recovery.conf"
 #define RECOVERY_COMMAND_DONE	"recovery.done"
-#define PROMOTE_SIGNAL_FILE "promote"
-#define FAST_PROMOTE_SIGNAL_FILE "fast_promote"
+#define PROMOTE_SIGNAL_FILE		"promote"
+#define FALLBACK_PROMOTE_SIGNAL_FILE "fallback_promote"
 
 
 /* User-settable parameters */
@@ -2608,7 +2608,7 @@ XLogFileOpen(XLogSegNo segno)
 	if (fd < 0)
 		ereport(PANIC,
 				(errcode_for_file_access(),
-				 errmsg("could not open xlog file \"%s\": %m", path)));
+				 errmsg("could not open transaction log file \"%s\": %m", path)));
 
 	return fd;
 }
@@ -4997,7 +4997,7 @@ StartupXLOG(void)
 		ereport(ERROR,
 				(errcode(ERRCODE_OUT_OF_MEMORY),
 				 errmsg("out of memory"),
-			errdetail("Failed while allocating an XLog reading processor")));
+			errdetail("Failed while allocating an XLog reading processor.")));
 	xlogreader->system_identifier = ControlFile->system_identifier;
 
 	if (read_backup_label(&checkPointLoc, &backupEndRequired,
@@ -5140,7 +5140,7 @@ StartupXLOG(void)
 		ereport(FATAL,
 				(errmsg("requested timeline %u is not a child of this server's history",
 						recoveryTargetTLI),
-				 errdetail("Latest checkpoint is at %X/%X on timeline %u, but in the history of the requested timeline, the server forked off from that timeline at %X/%X",
+				 errdetail("Latest checkpoint is at %X/%X on timeline %u, but in the history of the requested timeline, the server forked off from that timeline at %X/%X.",
 						   (uint32) (ControlFile->checkPoint >> 32),
 						   (uint32) ControlFile->checkPoint,
 						   ControlFile->checkPointCopy.ThisTimeLineID,
@@ -7873,7 +7873,7 @@ checkTimeLineSwitch(XLogRecPtr lsn, TimeLineID newTLI, TimeLineID prevTLI)
 	/* Check that the record agrees on what the current (old) timeline is */
 	if (prevTLI != ThisTimeLineID)
 		ereport(PANIC,
-				(errmsg("unexpected prev timeline ID %u (current timeline ID %u) in checkpoint record",
+				(errmsg("unexpected previous timeline ID %u (current timeline ID %u) in checkpoint record",
 						prevTLI, ThisTimeLineID)));
 
 	/*
@@ -9927,19 +9927,20 @@ CheckForStandbyTrigger(void)
 	{
 		/*
 		 * In 9.1 and 9.2 the postmaster unlinked the promote file inside the
-		 * signal handler. We now leave the file in place and let the Startup
-		 * process do the unlink. This allows Startup to know whether we're
-		 * doing fast or normal promotion. Fast promotion takes precedence.
+		 * signal handler. It now leaves the file in place and lets the
+		 * Startup process do the unlink. This allows Startup to know whether
+		 * it should create a full checkpoint before starting up (fallback
+		 * mode). Fast promotion takes precedence.
 		 */
-		if (stat(FAST_PROMOTE_SIGNAL_FILE, &stat_buf) == 0)
+		if (stat(PROMOTE_SIGNAL_FILE, &stat_buf) == 0)
 		{
-			unlink(FAST_PROMOTE_SIGNAL_FILE);
 			unlink(PROMOTE_SIGNAL_FILE);
+			unlink(FALLBACK_PROMOTE_SIGNAL_FILE);
 			fast_promote = true;
 		}
-		else if (stat(PROMOTE_SIGNAL_FILE, &stat_buf) == 0)
+		else if (stat(FALLBACK_PROMOTE_SIGNAL_FILE, &stat_buf) == 0)
 		{
-			unlink(PROMOTE_SIGNAL_FILE);
+			unlink(FALLBACK_PROMOTE_SIGNAL_FILE);
 			fast_promote = false;
 		}
 
@@ -9975,7 +9976,7 @@ CheckPromoteSignal(void)
 	struct stat stat_buf;
 
 	if (stat(PROMOTE_SIGNAL_FILE, &stat_buf) == 0 ||
-		stat(FAST_PROMOTE_SIGNAL_FILE, &stat_buf) == 0)
+		stat(FALLBACK_PROMOTE_SIGNAL_FILE, &stat_buf) == 0)
 		return true;
 
 	return false;

@@ -2807,7 +2807,7 @@
       </row>
 
       <row>
-       <entry><literal>ut8_to_euc_jis_2004</literal></entry>
+       <entry><literal>utf8_to_euc_jis_2004</literal></entry>
        <entry><literal>UTF8</literal></entry>
        <entry><literal>EUC_JIS_2004</literal></entry>
       </row>
@@ -2819,7 +2819,7 @@
       </row>
 
       <row>
-       <entry><literal>ut8_to_shift_jis_2004</literal></entry>
+       <entry><literal>utf8_to_shift_jis_2004</literal></entry>
        <entry><literal>UTF8</literal></entry>
        <entry><literal>SHIFT_JIS_2004</literal></entry>
       </row>
@@ -5623,7 +5623,7 @@ SELECT SUBSTRING('XY1234Z', 'Y*?([0-9]{1,3})');
        </row>
        <row>
         <entry><literal>J</literal></entry>
-        <entry>Julian Day (days since November 24, 4714 BC at midnight)</entry>
+        <entry>Julian Day (integer days since November 24, 4714 BC at midnight UTC)</entry>
        </row>
        <row>
         <entry><literal>Q</literal></entry>

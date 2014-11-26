@@ -218,9 +218,7 @@ namestrcpy(Name name, const char *str)
 {
 	if (!name || !str)
 		return -1;
-/*	printf("namestr %lx; str %lx; len %d\n", NameStr(*name), str, NAMEDATALEN);
-	fflush(stdout);
-	*/
+	// r0ml patched: OSX9 doesn't like it whne StrNCpy args are equal
 	if (NameStr(*name) == str) return 0;
 	StrNCpy(NameStr(*name), str, NAMEDATALEN);
 	return 0;
